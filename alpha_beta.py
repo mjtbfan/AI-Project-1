@@ -16,6 +16,7 @@ class AlphaBetaAgent(agent.Agent):
         super().__init__(name)
         # Max search depth
         self.max_depth = max_depth
+        self.move = 0
 
     # Pick a column.
     #
@@ -23,9 +24,56 @@ class AlphaBetaAgent(agent.Agent):
     # RETURN [int]: the column where the token must be added
     #
     # NOTE: make sure the column is legal, or you'll lose the game.
+    #def go(self, brd):
+        """Search for the best move (choice of column for the token)"""
+        #if not self.max_depth:
+        #    return self.alpha_beta(brd, -1, 1)
+        #else:
+     #   return self.alpha_beta(brd, -(brd.w * brd.h) / 2, (brd.w * brd.h) / 2)
+
     def go(self, brd):
         """Search for the best move (choice of column for the token)"""
-        # Your code here
+        #if not self.max_depth:
+        #    return self.alpha_beta(brd, -1, 1)
+        #else:
+        self.alpha_beta(brd, -(brd.w * brd.h) / 2, (brd.w * brd.h) / 2)
+        return self.move
+
+    def alpha_beta(self, brd, alpha, beta):
+        move = 0
+        if (len(self.get_successors(brd)) == brd.w * brd.h):
+            return 0
+       
+        for col in range(brd.w):
+            if (col in brd.free_cols()): 
+                #newbrd = brd.copy() 
+                brd.add_token(col)
+                if (brd.get_outcome() != 0):
+                    return (brd.w * brd.h + 1 - len(self.get_successors(brd))) / 2
+        
+        max = (brd.w * brd.h - 1 - len(self.get_successors(brd))) / 2
+
+        if beta > max:
+            beta = max
+            if alpha >= beta:
+                return move
+        
+        for col in range(brd.w):
+            if (col in brd.free_cols()):
+                
+                brd.add_token(col)
+
+                score = -self.alpha_beta(brd, -beta, -alpha)
+
+                if (score >= beta):
+                    return col;
+                if (score > alpha):
+                    alpha = score;
+
+        
+        
+        return move 
+
 
     # Get the successors of the given board.
     #
