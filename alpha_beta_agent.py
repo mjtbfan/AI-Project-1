@@ -23,9 +23,21 @@ class AlphaBetaAgent(agent.Agent):
     # RETURN [int]: the column where the token must be added
     #
     # NOTE: make sure the column is legal, or you'll lose the game.
+    def calculate_value(self, brd):
+        max_y = 0
+        for i in range(len(brd.board)):
+            if sum(brd.board[i]) == 0:
+                max_y = i + 1
+                break
+
+        score_board = brd.board[0:max_y]
+        print(score_board)
+
     def go(self, brd):
         """Search for the best move (choice of column for the token)"""
         # Your code here
+        self.calculate_value(brd)
+
 
     # Get the successors of the given board.
     #
