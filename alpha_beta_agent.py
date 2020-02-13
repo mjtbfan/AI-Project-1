@@ -66,9 +66,9 @@ class AlphaBetaAgent(agent.Agent):
                 score = -self.alpha_beta(brd, -beta, -alpha)
 
                 if (score >= beta):
-                    return col;
+                    return col
                 if (score > alpha):
-                    alpha = score;
+                    alpha = score
 
         
         
