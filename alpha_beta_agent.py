@@ -13,7 +13,7 @@ class AlphaBetaAgent(agent.Agent):
     #
     # PARAM [string] name:      the name of this player
     # PARAM [int]    max_depth: the maximum search depth
-    def __init__(self, name, max_depth):
+    def __init__(self, name, max_depth, aVal=5, oVal=-5):
         super().__init__(name)
         # Max search depth
         self.max_depth = max_depth
@@ -21,19 +21,18 @@ class AlphaBetaAgent(agent.Agent):
         self.total_moves = 0
         self.record = []
 
-        self.total_moves_dec = 0.8  # constant that decrements the total move variable depending on the depth
-        self.aVal = 50            # constant for heurisftic function
-        self.oVal = -3            # constant for heuristic when opponent has winning opportunity
+        self.total_moves_dec = 1  # constant that decrements the total move variable depending on the depth
+        self.aVal = aVal  # constant for heurisftic function
+        self.oVal = oVal  # constant for heuristic when opponent has winning opportunity
 
         # Tree to visualize the values from the score function
         self.scores_tree = {}
-        for x in range(max_depth+1):
+        for x in range(max_depth + 1):
             self.scores_tree[x] = []
         self.scores_list = []
 
-        self.pruned = 0         # keep track of pruned branches
-        self.debug = False      # to toggle on and off the print functions
-
+        self.pruned = 0  # keep track of pruned branches
+        self.debug = False  # to toggle on and off the print functions
 
     # Pick a column.
     #
@@ -44,21 +43,25 @@ class AlphaBetaAgent(agent.Agent):
     def go(self, brd):
         self.record = []
         """search for the best move (choice of column for the token)"""
+
+        if brd.player == 1 and self.aVal < self.oVal:
+            temp = self.aVal
+            self.aVal = self.oVal
+            self.oVal = temp
+        elif brd.player == 2 and self.aVal > self.oVal:
+            temp = self.aVal
+            self.aVal = self.oVal
+            self.oVal = temp
+
         self.total_moves += self.total_moves_dec
-        # print(self.alpha_beta(brd, -1, 1))
         self.alpha_beta(brd, -(brd.w * brd.h) / 2, (brd.w * brd.h) / 2, self.max_depth)
         self.total_moves += self.total_moves_dec
-        # brd.print_it()
-        # print("check successor")
-        # print((self.get_successors(brd)[0])[0].print_it())
+
         if self.debug:
             print(self.record)
-            print ("SCORES TREE:")
-        # print(self.scores_tree)
-        # self.print_tree(brd,self.scores_tree)
+            print("SCORES TREE:")
             print("PRUNED:", self.pruned)
 
-        # self.move = self.best_move(self.record)
         return self.move
 
     # Print the score tree
@@ -70,10 +73,10 @@ class AlphaBetaAgent(agent.Agent):
     def print_tree(self, brd, d):
         for key in d:
             if key == 0:
-                print("-"*self.max_depth*brd.w, sep='')
+                print("-" * self.max_depth * brd.w, sep='')
             else:
                 for values in d.values():
-                        print("key:",key, "values:", values, "---", sep='')
+                    print("key:", key, "values:", values, "---", sep='')
                 print(sep='')
 
     # NegaMax with Alpha Beta Prunning
@@ -96,10 +99,7 @@ class AlphaBetaAgent(agent.Agent):
         successors = self.get_successors(newbrd)  # check for win in next move (look at all possible moves)
         for tuple in successors:
             board = tuple[0]
-            col = tuple[1]
-            # board.print_it()
 
-            # self.temp = newbrd
             if (board.get_outcome() != 0):
                 self.move = tuple[1]
                 self.record.append([self.move, (board.w * board.h + 1 - self.total_moves) / 2])
@@ -122,32 +122,18 @@ class AlphaBetaAgent(agent.Agent):
                 self.scores_list.append(score)
                 self.scores_tree[depth].append([col, score])
 
-
                 if (score >= beta):
                     return score
+
                 if (score > alpha):
-                    self.move = col # determines the next move based on the algorithm
-                    # print ("next best")
-                    # print (newbrd.free_cols())
+                    self.move = col  # determines the next move based on the algorithm
 
                     alpha = score
                     self.record.append([self.move, alpha])
 
-
-
         self.scores_list.clear()
         self.total_moves = temp
         return alpha
-
-    def best_move(self, record):
-        val = -500
-        move = 0
-        for i in record:
-            if i[1] > val:
-                val = i[1]
-                move = i[0]
-
-        return move
 
     # Get the successors of the given board.
     #

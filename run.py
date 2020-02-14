@@ -36,12 +36,13 @@ random.seed(1)
 #
 # Human vs. AlphaBeta
 #
-g = game.Game(7, # width
-              6, # height
-              4, # tokens in a row to win
-              agent.InteractiveAgent("human"),    # player 1
-              aba.AlphaBetaAgent("alphabeta", 20)) # player 2
-#3,3,4,4,2,1,1,2,1
+g = game.Game(7,  # width
+              6,  # height
+              4,  # tokens in a row to win
+              aba.AlphaBetaAgent("alphabeta", 7),
+              agent.InteractiveAgent("human"),  # player 1
+              )  # player 2
+# 3,3,4,4,2,1,1,2,1
 #
 # Human vs. Human
 #
@@ -54,4 +55,3 @@ g = game.Game(7, # width
 
 # Execute the game
 outcome = g.go()
-

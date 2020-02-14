@@ -57,12 +57,19 @@ class RandomAgent(Agent):
 class InteractiveAgent(Agent):
     """Interactive player"""
 
+    def __init__(self, name, tournament=0):
+        super().__init__(name)
+        self.name = name
+        self.tournament = tournament
     # Ask a human to pick a column.
     #
     # PARAM [board.Board] brd: the current board state (ignored)
     # RETURN [int]: the column where the token must be added
     def go(self, brd):
         freecols = brd.free_cols()
+        if self.tournament:
+            brd.print_it()
+
         col = int(input("Which column? "))
         while not col in freecols:
             print("Can't place a token in column", col)
