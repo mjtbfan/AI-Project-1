@@ -1,6 +1,7 @@
 import math
 import agent
 
+
 ###########################
 # Alpha-Beta Search Agent #
 ###########################
@@ -16,6 +17,21 @@ class AlphaBetaAgent(agent.Agent):
         super().__init__(name)
         # Max search depth
         self.max_depth = max_depth
+        self.move = 0
+        self.total_moves = 0
+        self.record = []
+        self.aVal = 4           # constant for heuristic function
+        self.oVal = -10         # constant for heuristic when opponent has winning opportunity
+
+        # Tree to visualize the values from the score function
+        self.scores_tree = {}
+        for x in range(max_depth+1):
+            self.scores_tree[x] = []
+        self.scores_list = []
+
+        self.pruned = 0         # keep track of pruned branches
+        self.debug = False      # to toggle on and off the print functions
+
 
     # Pick a column.
     #
@@ -24,8 +40,112 @@ class AlphaBetaAgent(agent.Agent):
     #
     # NOTE: make sure the column is legal, or you'll lose the game.
     def go(self, brd):
-        """Search for the best move (choice of column for the token)"""
-        # Your code here
+        self.record = []
+        """search for the best move (choice of column for the token)"""
+        self.total_moves += 1
+        # print(self.alpha_beta(brd, -1, 1))
+        self.alpha_beta(brd, -(brd.w * brd.h) / 2, (brd.w * brd.h) / 2, self.max_depth)
+        self.total_moves += 1
+        # brd.print_it()
+        # print("check successor")
+        # print((self.get_successors(brd)[0])[0].print_it())
+        if self.debug:
+            print(self.record)
+            print ("SCORES TREE:")
+        # print(self.scores_tree)
+        # self.print_tree(brd,self.scores_tree)
+            print("PRUNED:", self.pruned)
+
+        # self.move = self.best_move(self.record)
+        return self.move
+
+    # Print the score tree
+    #
+    # PARAM [board.Board] brd: the current board state
+    # PARAM [dictionary] d: the dictionary with keys as depth and values as scores at each depth
+    #
+    # NOTE: needs work
+    def print_tree(self, brd, d):
+        for key in d:
+            if key == 0:
+                print("-"*self.max_depth*brd.w, sep='')
+            else:
+                for values in d.values():
+                        print("key:",key, "values:", values, "---", sep='')
+                print(sep='')
+
+    # NegaMax with Alpha Beta Prunning
+    #
+    # PARAM [board.Board] brd: the current board state
+    # PARAM [int] alpha: alpha value
+    # PARAM [int] beta: beta value
+    # PARAM [int] depth: current depth on tree
+    #
+    # RETURN [int]: the alpha value choosen
+    # Note: the next move is determined and saved to the constuctor
+    def alpha_beta(self, brd, alpha, beta, depth):
+
+        temp = self.total_moves
+        if (self.get_successors(brd) == [] or depth == 0):  # draw condition
+            return 0
+
+        newbrd = brd.copy()
+
+        successors = self.get_successors(newbrd)  # check for win in next move (look at all possible moves)
+        for tuple in successors:
+            board = tuple[0]
+            col = tuple[1]
+            # board.print_it()
+
+            # self.temp = newbrd
+            if (board.get_outcome() != 0):
+                self.move = tuple[1]
+                self.record.append([self.move, (board.w * board.h + 1 - self.total_moves) / 2])
+                return (board.w * board.h + self.oVal + self.max_depth - depth - self.total_moves) / 2
+
+        max = (newbrd.w * newbrd.h - self.aVal - self.total_moves) / 2  # initial after no win in next move
+
+        if beta > max:  # check beta
+            beta = max
+            if alpha >= beta:  # prune all higher values
+                self.pruned += 1  # To determine how many sub-nodes are pruned
+                return beta
+
+        for col in range(newbrd.w):  # compute score of all possible next moves & select best move
+            if (col in newbrd.free_cols()):
+
+                newbrd.add_token(col)
+                self.total_moves += 1
+                score = self.alpha_beta(newbrd, -beta, -alpha, depth - 1)
+                self.scores_list.append(score)
+                self.scores_tree[depth].append([col, score])
+
+
+                if (score >= beta):
+                    return score
+                if (score > alpha):
+                    self.move = col # determines the next move based on the algorithm
+                    # print ("next best")
+                    # print (newbrd.free_cols())
+
+                    alpha = score
+                    self.record.append([self.move, alpha])
+
+
+
+        self.scores_list.clear()
+        self.total_moves = temp
+        return alpha
+
+    def best_move(self, record):
+        val = -500
+        move = 0
+        for i in record:
+            if i[1] > val:
+                val = i[1]
+                move = i[0]
+
+        return move
 
     # Get the successors of the given board.
     #
@@ -49,5 +169,5 @@ class AlphaBetaAgent(agent.Agent):
             # (This internally changes nb.player, check the method definition!)
             nb.add_token(col)
             # Add board to list of successors
-            succ.append((nb,col))
+            succ.append((nb, col))
         return succ
