@@ -27,7 +27,7 @@ class AlphaBetaAgent(agent.Agent):
                     sequence_size += 1
                 else:
                     break
-            current_sequence.append([i, (sequence_size - 1)])
+            current_sequence.append([i, sequence_size])
 
         return current_sequence
 
@@ -69,26 +69,55 @@ class AlphaBetaAgent(agent.Agent):
         curr_best = [[-1, -1], [[[-1, -1]], -1]]
         best_options = []
         for i in options:
-            print(i)
-            for j in range(4):
-                if i[0][1][j][1] > curr_best[1][1]:
-                    curr_best = [i[0][0], i[0][1][j]]
-                    best_options.append(curr_best)
+            for k in i:
+                for j in range(4):
+                    if k[1][j][1] > curr_best[1][1]:
+                        curr_best = [k[0], k[1][j]]
+                        best_options.append(curr_best)
 
         move = curr_best[0][0]
         temp_best = -1
         for i in best_options:
+            print(i)
+            print(i[1][1])
             max_add = i[0][0] + (i[1][0][0] * i[1][1])
-            max_sub = i[0][0] - (i[1][0][0] * i[1][1])
-            add = i[0][0] + i[1][0][0]
             sub = i[0][0] - i[1][0][0]
-            if i[1][1] > temp_best and (add in brd.free_cols() or sub in brd.free_cols()):
-                if max_add == (brd.w - 1):
+            if i[1][1] > temp_best and (max_add in brd.free_cols() or sub in brd.free_cols()):
+                temp_best = i[1][1]
+                print(temp_best)
+                if max_add in brd.free_cols():
+                    move = max_add
+                elif sub in brd.free_cols():
                     move = sub
-                else:
-                    move = add
 
-        return move
+        return move, temp_best
+
+    def alpha_beta(self, brd, player, alpha, beta):
+
+        continue_values = []
+        continue_boards = []
+        continue_moves = []
+
+        if player == 1:
+            for i in self.get_successors(brd):
+                temp, value = self.calculate_value(i[0], player)
+                if value > alpha:
+                    continue_boards.append(i[0])
+                    continue_values.append(value)
+                    continue_moves.append(temp)
+
+            return continue_boards, continue_moves, continue_values
+
+        if player == 2:
+            for i in self.get_successors(brd):
+                temp, value = self.calculate_value(i[0], player)[0], -self.calculate_value(i[0], player)[1]
+                if value < beta:
+                    continue_boards.append(i[0])
+                    continue_values.append(value)
+                    continue_moves.append(temp)
+
+            return continue_boards, continue_moves, continue_values
+
 
     # Pick a column.
     #
@@ -99,8 +128,60 @@ class AlphaBetaAgent(agent.Agent):
     def go(self, brd):
         """Search for the best move (choice of column for the token)"""
         # Your code here
-        player = brd.player
-        return self.calculate_value(brd, player)
+        alpha = -math.inf
+        beta = math.inf
+
+        current_player = brd.player
+        board_list = [brd]
+        temp_moves = []
+        temp_values = []
+
+        moves = []
+        values = []
+
+        for i in range(self.max_depth):
+            temp = []
+            for j in board_list:
+                temp.append(self.alpha_beta(j, current_player, alpha, beta))
+            for k in temp:
+                board_list = k[0]
+                temp_moves.append(k[1])
+                temp_values.append(k[2])
+
+            for bruh in range(len(temp_values)):
+                if temp_values[bruh]:
+                    moves.append(temp_moves[bruh])
+                    values.append(temp_values[bruh])
+
+
+            print(values)
+            print(moves)
+            if max(max(values)) > alpha:
+                alpha = max(max(values))
+            if min(min(values)) < beta:
+                beta = min(min(values))
+
+            current_player = 2 if current_player == 1 else 1
+
+        index1 = -1
+        index2 = -1
+        if brd.player == 1:
+            for i in range(len(values)):
+                big = max(values[i])
+                if big == alpha:
+                    index1 = i
+                    index2 = values[i].index(alpha)
+                    break
+        else:
+            for i in range(len(values)):
+                big = min(values[i])
+                if big == beta:
+                    index1 = i
+                    index2 = values[i].index(beta)
+                    break
+
+        return moves[index1][index2]
+
 
 
     # Get the successors of the given board.
