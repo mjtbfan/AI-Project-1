@@ -20,8 +20,10 @@ class AlphaBetaAgent(agent.Agent):
         self.move = 0
         self.total_moves = 0
         self.record = []
-        self.aVal = 4           # constant for heuristic function
-        self.oVal = -10         # constant for heuristic when opponent has winning opportunity
+
+        self.total_moves_dec = 0.8  # constant that decrements the total move variable depending on the depth
+        self.aVal = 50            # constant for heurisftic function
+        self.oVal = -3            # constant for heuristic when opponent has winning opportunity
 
         # Tree to visualize the values from the score function
         self.scores_tree = {}
@@ -42,10 +44,10 @@ class AlphaBetaAgent(agent.Agent):
     def go(self, brd):
         self.record = []
         """search for the best move (choice of column for the token)"""
-        self.total_moves += 1
+        self.total_moves += self.total_moves_dec
         # print(self.alpha_beta(brd, -1, 1))
         self.alpha_beta(brd, -(brd.w * brd.h) / 2, (brd.w * brd.h) / 2, self.max_depth)
-        self.total_moves += 1
+        self.total_moves += self.total_moves_dec
         # brd.print_it()
         # print("check successor")
         # print((self.get_successors(brd)[0])[0].print_it())
@@ -115,7 +117,7 @@ class AlphaBetaAgent(agent.Agent):
             if (col in newbrd.free_cols()):
 
                 newbrd.add_token(col)
-                self.total_moves += 1
+                self.total_moves += self.total_moves_dec
                 score = self.alpha_beta(newbrd, -beta, -alpha, depth - 1)
                 self.scores_list.append(score)
                 self.scores_tree[depth].append([col, score])
